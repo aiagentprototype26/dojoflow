@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DojoFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --charcoal: #141414;
+    --panel: #1a1a1a;
+    --border: #2a2a2a;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --red: #c0392b;
+    --white: #f0ece0;
+    --muted: #6b6b6b;
+    --belt-white: #f5f5f0;
+    --belt-yellow: #f5c518;
+    --belt-orange: #e8720c;
+    --belt-green: #2d7a3a;
+    --belt-blue: #1a4fa0;
+    --belt-purple: #6b2fa0;
+    --belt-brown: #7a4a1e;
+    --belt-black: #1a1a1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+  nav {
+    background: var(--charcoal);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--white); font-weight: 700; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--white); background: var(--border); }
+  .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.12); }
+  .hero {
+    position: relative;
+    padding: 64px 32px 48px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '武';
+    position: absolute;
+    font-size: 320px;
+    color: rgba(201,168,76,0.04);
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    font-family: serif;
+  }
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .hero-sub { font-size: 14px; color: var(--muted); font-weight: 300; }
+  .checkin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 24px;
+    flex: 1;
+  }
+  .student-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .student-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(201,168,76,0.15), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .student-card:hover { transform: translateY(-3px); border-color: var(--gold); }
+  .student-card:hover::after { opacity: 1; }
+  .student-card:focus-visible, .streak-row:focus-visible, .progress-card:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+    border-color: var(--gold);
+  }
+  .student-card.checked-in { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .student-card.checked-in .card-name { color: var(--gold); }
+  .card-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    position: relative;
+  }
+  .card-check {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .student-card.checked-in .card-check { opacity: 1; transform: scale(1); }
+  .card-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; transition: color 0.2s; }
+  .belt-pip { display: inline-block; width: 32px; height: 6px; border-radius: 3px; margin-top: 4px; }
+  .card-streak { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .checkin-count {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .checkin-count span { font-size: 13px; color: var(--muted); }
+  .checkin-count strong { color: var(--gold); font-size: 20px; font-weight: 500; }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .streaks-list { padding: 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .streak-row {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .streak-row:hover { border-color: var(--gold); }
+  .streak-rank {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--border);
+    width: 28px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .streak-row:nth-child(1) .streak-rank { color: #FFD700; }
+  .streak-row:nth-child(2) .streak-rank { color: #C0C0C0; }
+  .streak-row:nth-child(3) .streak-rank { color: #cd7f32; }
+  .streak-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .streak-info { flex: 1; }
+  .streak-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .streak-meta { font-size: 12px; color: var(--muted); }
+  .streak-fire { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .streak-num {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .streak-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .flame { font-size: 22px; }
+  .heatmap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 0 24px 24px;
+  }
+  .heatmap-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .heatmap-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; }
+  .heatmap-cell { aspect-ratio: 1; border-radius: 3px; background: var(--border); transition: background 0.2s; }
+  .heatmap-cell.l1 { background: rgba(201,168,76,0.2); }
+  .heatmap-cell.l2 { background: rgba(201,168,76,0.45); }
+  .heatmap-cell.l3 { background: rgba(201,168,76,0.7); }
+  .heatmap-cell.l4 { background: var(--gold); }
+  .belt-container { padding: 24px; flex: 1; }
+  .belt-selector { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .belt-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .belt-btn::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .belt-btn.active { border-color: var(--gold); color: var(--white); background: rgba(201,168,76,0.1); }
+  .belt-btn[data-belt="white"]::before { background: var(--belt-white); }
+  .belt-btn[data-belt="yellow"]::before { background: var(--belt-yellow); }
+  .belt-btn[data-belt="orange"]::before { background: var(--belt-orange); }
+  .belt-btn[data-belt="green"]::before { background: var(--belt-green); }
+  .belt-btn[data-belt="blue"]::before { background: var(--belt-blue); }
+  .belt-btn[data-belt="purple"]::before { background: var(--belt-purple); }
+  .belt-btn[data-belt="brown"]::before { background: var(--belt-brown); }
+  .belt-btn[data-belt="black"]::before { background: var(--belt-black); border: 1px solid var(--border); }
+  .progress-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .progress-card:hover { border-color: var(--gold); }
+  .progress-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .progress-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .progress-info { flex: 1; }
+  .progress-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .progress-belt { font-size: 12px; color: var(--muted); }
+  .progress-pct { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: var(--gold); }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .progress-milestones { display: flex; gap: 8px; margin-top: 12px; }
+  .milestone { flex: 1; text-align: center; font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+  .milestone.done { color: var(--gold); }
+  .milestone-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); margin: 0 auto 4px; }
+  .milestone.done .milestone-dot { background: var(--gold); }
+  .dashboard { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 14px; text-align: center; }
+  .stat-num { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+  .section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 16px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; background: rgba(201,168,76,0.3); border-radius: 3px 3px 0 0; position: relative; transition: background 0.2s; }
+  .bar:hover { background: var(--gold); }
+  .bar.today { background: var(--gold); }
+  .bar-day { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+  .activity-list { display: flex; flex-direction: column; gap: 10px; }
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .activity-text { flex: 1; font-size: 13px; }
+  .activity-text strong { color: var(--white); }
+  .activity-text span { color: var(--muted); }
+  .activity-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .belt-dist { display: flex; gap: 6px; align-items: flex-end; height: 60px; margin-top: 12px; }
+  .belt-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .belt-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; }
+  .belt-bar-label { font-size: 9px; color: var(--muted); }
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+  .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.4);
+    width: 60px;
+    height: 60px;
+    margin-left: -30px;
+    margin-top: -30px;
+    animation: ripple 0.6s ease-out;
+    pointer-events: none;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .screen.active > * { animation: fadeSlideIn 0.4s ease both; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0 24px; }
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--gold);
+    color: var(--black);
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--charcoal);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 32px 28px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .modal-stat { background: var(--panel); border-radius: 10px; padding: 14px; text-align: center; }
+  .modal-stat-num { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 900; color: var(--gold); }
+  .modal-stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .modal-close {
+    width: 100%;
+    padding: 12px;
+    background: var(--border);
+    border: none;
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: var(--gold); color: var(--black); }
+  .promote-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--gold);
+    border: none;
+    border-radius: 10px;
+    color: var(--black);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.2s;
+  }
+  .promote-btn:hover { background: var(--gold-light); }
+  .separator { text-align: center; font-size: 11px; color: var(--muted); margin: 12px 0; letter-spacing: 2px; }
+  .storage-note { font-size: 11px; color: var(--muted); text-align: center; padding: 0 24px 16px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Dojo<span>Flow</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showScreen('checkin')">Check-In</button>
+    <button class="nav-tab" onclick="showScreen('streaks')">Streaks</button>
+    <button class="nav-tab" onclick="showScreen('belts')">Belts</button>
+    <button class="nav-tab" onclick="showScreen('dashboard')">Owner</button>
+  </div>
+</nav>
+<div class="screen active" id="screen-checkin">
+  <div class="hero">
+    <div class="hero-eyebrow" id="checkin-hero-eyebrow">Today · 6:30 PM Class</div>
+    <div class="hero-title">Student Check-In</div>
+    <div class="hero-sub">Tap your card to mark attendance</div>
+  </div>
+  <div class="checkin-grid" id="checkin-grid"></div>
+  <div class="checkin-count">
+    <div>
+      <strong id="checkin-num">0</strong>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">checked in today</div>
+    </div>
+    <button class="btn-primary" onclick="checkInAll()">Check In All</button>
+  </div>
+  <div class="storage-note">Check-ins, streaks, promotions and activity are saved in this browser and restored on reload.</div>
+</div>
+<div class="screen" id="screen-streaks">
+  <div class="hero">
+    <div class="hero-eyebrow">Attendance · This Month</div>
+    <div class="hero-title">Attendance Streaks</div>
+    <div class="hero-sub">Consistency builds champions</div>
+  </div>
+  <div class="heatmap">
+    <div class="heatmap-title">Class activity — last 13 weeks (from recorded check-ins)</div>
+    <div class="heatmap-grid" id="heatmap-grid"></div>
+  </div>
+  <div class="streaks-list" id="streaks-list"></div>
+</div>
+<div class="screen" id="screen-belts">
+  <div class="hero">
+    <div class="hero-eyebrow">Rank · Progression</div>
+    <div class="hero-title">Belt Progress</div>
+    <div class="hero-sub">Track every student's journey</div>
+  </div>
+  <div class="belt-container">
+    <div class="belt-selector" id="belt-selector"></div>
+    <div id="belt-list"></div>
+  </div>
+</div>
+<div class="screen" id="screen-dashboard">
+  <div class="hero">
+    <div class="hero-eyebrow">Owner · Overview</div>
+    <div class="hero-title">Dojo Dashboard</div>
+    <div class="hero-sub">Your dojo at a glance</div>
+  </div>
+  <div class="dashboard">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="dash-students">12</div>
+        <div class="stat-label">Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="dash-checkins">0</div>
+        <div class="stat-label">Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="dash-avg-streak">0</div>
+        <div class="stat-label">Avg Streak (Days)</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="section-label">Weekly Attendance</div>
+      <div class="bar-chart" id="week-chart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="section-label">Belt Distribution</div>
+      <div class="belt-dist" id="belt-dist"></div>
+    </div>
+    <div>
+      <div class="section-label">Recent Activity</div>
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-stats" id="modal-stats"></div>
+    <div id="modal-actions"></div>
+    <div class="separator">OR</div>
+    <button class="modal-close" onclick="closeModal()">Dismiss</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+// ── DATA ──────────────────────────────────────────
+const belts = ['white','yellow','orange','green','blue','purple','brown','black'];
+const beltColors = {
+  white:'#e8e8e0', yellow:'#f5c518', orange:'#e8720c',
+  green:'#2d7a3a', blue:'#1a4fa0', purple:'#6b2fa0',
+  brown:'#7a4a1e', black:'#333'
+};
+const avatarColors = ['#8B5E3C','#4A7C9E','#7B6E9E','#4A9E6E','#9E4A4A','#7B8E4A'];
+const defaultStudents = [
+  {id:1,name:'Kenji M.',initials:'KM',belt:'black',progress:72,streak:42,color:avatarColors[0]},
+  {id:2,name:'Sofia R.',initials:'SR',belt:'brown',progress:85,streak:31,color:avatarColors[1]},
+  {id:3,name:'Darius T.',initials:'DT',belt:'blue',progress:60,streak:28,color:avatarColors[2]},
+  {id:4,name:'Amara N.',initials:'AN',belt:'purple',progress:45,streak:19,color:avatarColors[3]},
+  {id:5,name:'Leo W.',initials:'LW',belt:'green',progress:90,streak:15,color:avatarColors[4]},
+  {id:6,name:'Priya K.',initials:'PK',belt:'blue',progress:33,streak:12,color:avatarColors[5]},
+  {id:7,name:'Omar J.',initials:'OJ',belt:'orange',progress:70,streak:9,color:avatarColors[0]},
+  {id:8,name:'Chloe B.',initials:'CB',belt:'yellow',progress:55,streak:7,color:avatarColors[1]},
+  {id:9,name:'Ravi S.',initials:'RS',belt:'white',progress:30,streak:5,color:avatarColors[2]},
+  {id:10,name:'Nadia F.',initials:'NF',belt:'green',progress:68,streak:4,color:avatarColors[3]},
+  {id:11,name:'Ethan L.',initials:'EL',belt:'yellow',progress:20,streak:3,color:avatarColors[4]},
+  {id:12,name:'Zara O.',initials:'ZO',belt:'white',progress:10,streak:2,color:avatarColors[5]},
+];
+const defaultActivity = [
+  {name:'Kenji M.',action:'promoted to Black Belt',time:'3d ago',color:avatarColors[0]},
+  {name:'Amara N.',action:'achieved 20-day streak',time:'1d ago',color:avatarColors[3]},
+  {name:'Leo W.',action:'completed sparring exam',time:'2h ago',color:avatarColors[4]},
+];
+
+// ── HELPERS: dates, escaping, persistence ─────────
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function localDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+}
+function todayKey() { return localDateKey(new Date()); }
+function parseLocalDate(key) {
+  const parts = String(key).split('-').map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+function formatDateKey(key) {
+  if (!key) return '—';
+  const d = parseLocalDate(key);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function lastClassLabel(student) {
+  if (!student.lastCheckin) return 'Last class: —';
+  if (student.lastCheckin === todayKey()) return 'Last class: Today';
+  return 'Last class: ' + formatDateKey(student.lastCheckin);
+}
+function beltLabel(belt) {
+  return belt.charAt(0).toUpperCase() + belt.slice(1);
+}
+
+const STORAGE_KEY = 'dojoflow-v1';
+let students = defaultStudents.map(function (s) { return Object.assign({}, s, { lastCheckin: null }); });
+let checkedIn = new Set();
+let checkedInDate = todayKey();
+let history = {};
+let activityFeed = defaultActivity.slice();
+let activeBeltFilter = 'all';
+
+function loadState() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (saved && Array.isArray(saved.students)) {
+      students = defaultStudents.map(function (def) {
+        const found = saved.students.find(function (x) { return x && x.id === def.id; });
+        if (!found) return Object.assign({}, def, { lastCheckin: null });
+        return Object.assign({}, def, {
+          belt: belts.indexOf(found.belt) >= 0 ? found.belt : def.belt,
+          progress: typeof found.progress === 'number' ? found.progress : def.progress,
+          streak: typeof found.streak === 'number' ? found.streak : def.streak,
+          lastCheckin: typeof found.lastCheckin === 'string' ? found.lastCheckin : null
+        });
+      });
+    }
+    if (saved && typeof saved.history === 'object' && saved.history !== null) {
+      history = saved.history;
+    }
+    if (saved && Array.isArray(saved.activity)) {
+      activityFeed = saved.activity.slice(0, 50);
+    }
+    // Only today's check-ins count as checked in today; yesterday's set does not carry over.
+    if (saved && saved.checkedInDate === todayKey() && Array.isArray(saved.checkedIn)) {
+      checkedInDate = saved.checkedInDate;
+      checkedIn = new Set(saved.checkedIn);
+    } else {
+      checkedInDate = todayKey();
+      checkedIn = new Set();
+    }
+  } catch (e) {
+    // Storage unavailable or corrupt: fall back to the default in-memory state.
+    students = defaultStudents.map(function (s) { return Object.assign({}, s, { lastCheckin: null }); });
+    checkedIn = new Set();
+    history = {};
+    activityFeed = defaultActivity.slice();
+  }
+}
+function saveState() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const payload = {
+      students: students.map(function (s) {
+        return { id: s.id, belt: s.belt, progress: s.progress, streak: s.streak, lastCheckin: s.lastCheckin || null };
+      }),
+      checkedInDate: todayKey(),
+      checkedIn: Array.from(checkedIn),
+      history: history,
+      activity: activityFeed.slice(0, 50)
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    // Storage full or unavailable: the app keeps working in memory for this session.
+  }
+}
+
+// ── UTILITIES ─────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function () { t.classList.remove('show'); }, 2400);
+}
+function showScreen(id) {
+  const tabs = ['checkin','streaks','belts','dashboard'];
+  const index = tabs.indexOf(id);
+  if (index < 0) return;
+  document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab')[index].classList.add('active');
+  if (id === 'dashboard') updateDashCheckins();
+}
+function addRipple(e, el) {
+  const r = document.createElement('div');
+  r.classList.add('ripple-effect');
+  const rect = el.getBoundingClientRect();
+  const x = (e && typeof e.clientX === 'number') ? (e.clientX - rect.left) : (rect.width / 2);
+  const y = (e && typeof e.clientY === 'number') ? (e.clientY - rect.top) : (rect.height / 2);
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  el.appendChild(r);
+  setTimeout(function () { r.remove(); }, 700);
+}
+function activateOnKey(el, handler) {
+  el.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler(e);
+    }
+  });
+}
+function setHeroDate() {
+  const el = document.getElementById('checkin-hero-eyebrow');
+  if (!el) return;
+  const now = new Date();
+  const weekday = now.toLocaleDateString(undefined, { weekday: 'long' });
+  const dateText = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  el.textContent = 'Today · ' + weekday + ' · ' + dateText + ' · 6:30 PM Class';
+}
+function refreshAll() {
+  renderCheckIn();
+  renderStreaks();
+  renderBelts();
+  renderDashboard();
+  saveState();
+}
+
+// ── CHECK-IN ──────────────────────────────────────
+function recordCheckIn(student) {
+  const key = todayKey();
+  if (student.lastCheckin !== key) {
+    student.streak += 1;
+    student.lastCheckin = key;
+  }
+  if (!history[key]) history[key] = [];
+  if (history[key].indexOf(student.id) < 0) history[key].push(student.id);
+}
+function renderCheckIn() {
+  const grid = document.getElementById('checkin-grid');
+  grid.innerHTML = '';
+  students.forEach(function (s) {
+    const card = document.createElement('div');
+    card.className = 'student-card' + (checkedIn.has(s.id) ? ' checked-in' : '');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-pressed', checkedIn.has(s.id) ? 'true' : 'false');
+    card.setAttribute('aria-label', s.name + ', ' + beltLabel(s.belt) + ' belt');
+    card.innerHTML =
+      '<div class="card-avatar" style="background:' + escapeHtml(s.color) + '">' +
+        escapeHtml(s.initials) +
+        '<div class="card-check">✓</div>' +
+      '</div>' +
+      '<div class="card-name">' + escapeHtml(s.name) + '</div>' +
+      '<div class="belt-pip" style="background:' + escapeHtml(beltColors[s.belt]) + '"></div>' +
+      '<div class="card-streak">🔥 ' + escapeHtml(s.streak) + ' day streak</div>';
+    card.onclick = function (e) { toggleCheckIn(e, card, s); };
+    activateOnKey(card, function (e) { toggleCheckIn(e, card, s); });
+    grid.appendChild(card);
+  });
+  updateCheckinCount();
+}
+function toggleCheckIn(e, card, student) {
+  if (e) addRipple(e, card);
+  if (checkedIn.has(student.id)) {
+    // Un-checking removes today's attendance, but does not erase streak history.
+    checkedIn.delete(student.id);
+    card.classList.remove('checked-in');
+    card.setAttribute('aria-pressed', 'false');
+  } else {
+    checkedIn.add(student.id);
+    recordCheckIn(student);
+    card.classList.add('checked-in');
+    card.setAttribute('aria-pressed', 'true');
+    showToast(student.name + ' checked in! 🥋');
+    addActivity(student);
+  }
+  updateCheckinCount();
+  updateDashCheckins();
+  renderStreaks();
+  renderDashboard();
+  saveState();
+}
+function updateCheckinCount() {
+  document.getElementById('checkin-num').textContent = checkedIn.size;
+}
+function checkInAll() {
+  const newly = [];
+  students.forEach(function (s) {
+    if (!checkedIn.has(s.id)) {
+      checkedIn.add(s.id);
+      recordCheckIn(s);
+      newly.push(s);
+    }
+  });
+  if (newly.length > 0) {
+    addActivities(newly);
+    showToast('All ' + students.length + ' students checked in! 🎉');
+  }
+  refreshAll();
+}
+
+// ── STREAKS ───────────────────────────────────────
+function renderStreaks() {
+  const hg = document.getElementById('heatmap-grid');
+  hg.innerHTML = '';
+  // Last 91 days ending today, oldest first, derived only from recorded history.
+  for (let i = 90; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = localDateKey(d);
+    const count = history[key] ? history[key].length : 0;
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell ' + (count >= 10 ? 'l4' : count >= 7 ? 'l3' : count >= 4 ? 'l2' : count >= 1 ? 'l1' : '');
+    cell.title = formatDateKey(key) + ': ' + count + ' checked in';
+    hg.appendChild(cell);
+  }
+  const sorted = students.slice().sort(function (a, b) { return b.streak - a.streak; });
+  const list = document.getElementById('streaks-list');
+  list.innerHTML = '';
+  sorted.forEach(function (s, i) {
+    const row = document.createElement('div');
+    row.className = 'streak-row';
+    row.style.cursor = 'pointer';
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', s.name + ', ' + s.streak + ' day streak');
+    row.innerHTML =
+      '<div class="streak-rank">' + (i + 1) + '</div>' +
+      '<div class="streak-avatar" style="background:' + escapeHtml(s.color) + '">' + escapeHtml(s.initials) + '</div>' +
+      '<div class="streak-info">' +
+        '<div class="streak-name">' + escapeHtml(s.name) + '</div>' +
+        '<div class="streak-meta">' + escapeHtml(beltLabel(s.belt)) + ' Belt · ' + escapeHtml(lastClassLabel(s)) + '</div>' +
+      '</div>' +
+      '<div class="streak-fire">' +
+        '<div>' +
+          '<div class="streak-num">' + escapeHtml(s.streak) + '</div>' +
+          '<div class="streak-label">Days</div>' +
+        '</div>' +
+        '<div class="flame">🔥</div>' +
+      '</div>';
+    row.onclick = function () { openStudentModal(s); };
+    activateOnKey(row, function () { openStudentModal(s); });
+    list.appendChild(row);
+  });
+}
+
+// ── BELTS ─────────────────────────────────────────
+function renderBelts() {
+  const sel = document.getElementById('belt-selector');
+  sel.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'belt-btn' + (activeBeltFilter === 'all' ? ' active' : '');
+  allBtn.textContent = 'All';
+  allBtn.onclick = function () { activeBeltFilter = 'all'; renderBelts(); };
+  sel.appendChild(allBtn);
+  belts.forEach(function (b) {
+    const btn = document.createElement('button');
+    btn.className = 'belt-btn' + (activeBeltFilter === b ? ' active' : '');
+    btn.setAttribute('data-belt', b);
+    btn.textContent = beltLabel(b);
+    btn.onclick = function () { activeBeltFilter = b; renderBelts(); };
+    sel.appendChild(btn);
+  });
+  const list = document.getElementById('belt-list');
+  list.innerHTML = '';
+  const filtered = activeBeltFilter === 'all' ? students : students.filter(function (s) { return s.belt === activeBeltFilter; });
+  filtered.forEach(function (s) {
+    const milestones = ['Basics','Forms','Sparring','Exam'];
+    // 80% is promotion-eligible, so at >=80% every milestone for this belt is done.
+    const passedCount = s.progress >= 80 ? milestones.length : Math.floor((s.progress / 100) * milestones.length);
+    const card = document.createElement('div');
+    card.className = 'progress-card';
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', s.name + ', ' + beltLabel(s.belt) + ' belt, ' + s.progress + ' percent');
+    card.onclick = function () { openStudentModal(s); };
+    activateOnKey(card, function () { openStudentModal(s); });
+    card.innerHTML =
+      '<div class="progress-header">' +
+        '<div class="progress-avatar" style="background:' + escapeHtml(s.color) + '">' + escapeHtml(s.initials) + '</div>' +
+        '<div class="progress-info">' +
+          '<div class="progress-name">' + escapeHtml(s.name) + '</div>' +
+          '<div class="progress-belt">' + escapeHtml(beltLabel(s.belt)) + ' Belt</div>' +
+        '</div>' +
+        '<div class="progress-pct">' + escapeHtml(s.progress) + '%</div>' +
+      '</div>' +
+      '<div class="progress-bar-bg">' +
+        '<div class="progress-bar-fill" style="width:' + escapeHtml(s.progress) + '%;background:' + escapeHtml(beltColors[s.belt]) + '"></div>' +
+      '</div>' +
+      '<div class="progress-milestones">' +
+        milestones.map(function (m, i) {
+          return '<div class="milestone ' + (i < passedCount ? 'done' : '') + '">' +
+            '<div class="milestone-dot"></div>' + escapeHtml(m) + '</div>';
+        }).join('') +
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+// ── DASHBOARD ─────────────────────────────────────
+function renderDashboard() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const now = new Date();
+  const mondayOffset = (now.getDay() + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - mondayOffset);
+  const vals = days.map(function (label, i) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = localDateKey(d);
+    if (key === todayKey()) return checkedIn.size;
+    if (d > now) return 0;
+    return history[key] ? history[key].length : 0;
+  });
+  const max = Math.max.apply(null, vals.concat([1]));
+  const todayIndex = (now.getDay() + 6) % 7;
+  const chart = document.getElementById('week-chart');
+  chart.innerHTML = '';
+  days.forEach(function (d, i) {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const pct = Math.round((vals[i] / max) * 100);
+    col.innerHTML =
+      '<div class="bar' + (i === todayIndex ? ' today' : '') + '" style="height:' + pct + '%" title="' + vals[i] + ' students"></div>' +
+      '<div class="bar-day">' + escapeHtml(d) + '</div>';
+    chart.appendChild(col);
+  });
+  const beltCounts = {};
+  belts.forEach(function (b) { beltCounts[b] = 0; });
+  students.forEach(function (s) { beltCounts[s.belt]++; });
+  const maxB = Math.max.apply(null, Object.values(beltCounts).concat([1]));
+  const dist = document.getElementById('belt-dist');
+  dist.innerHTML = '';
+  belts.forEach(function (b) {
+    const col = document.createElement('div');
+    col.className = 'belt-bar-col';
+    const pct = Math.round((beltCounts[b] / maxB) * 100);
+    col.innerHTML =
+      '<div class="belt-bar" style="height:' + pct + '%;background:' + escapeHtml(beltColors[b]) + ';' + (b === 'white' ? 'border:1px solid #444' : '') + '"></div>' +
+      '<div class="belt-bar-label">' + escapeHtml(b.slice(0, 3).toUpperCase()) + '</div>';
+    dist.appendChild(col);
+  });
+  renderActivity();
+  updateDashCheckins();
+  const studentsEl = document.getElementById('dash-students');
+  if (studentsEl) studentsEl.textContent = students.length;
+  const avgEl = document.getElementById('dash-avg-streak');
+  if (avgEl) {
+    const avg = students.length ? students.reduce(function (sum, s) { return sum + s.streak; }, 0) / students.length : 0;
+    avgEl.textContent = Math.round(avg * 10) / 10;
+  }
+}
+function addActivity(student) {
+  activityFeed.unshift({ name: student.name, action: 'checked in', time: 'just now', color: student.color });
+  activityFeed = activityFeed.slice(0, 50);
+  renderActivity();
+  saveState();
+}
+function addActivities(list) {
+  const entries = list.map(function (student) {
+    return { name: student.name, action: 'checked in', time: 'just now', color: student.color };
+  });
+  activityFeed = entries.concat(activityFeed).slice(0, 50);
+  renderActivity();
+  saveState();
+}
+function renderActivity() {
+  const list = document.getElementById('activity-list');
+  list.innerHTML = '';
+  activityFeed.slice(0, 5).forEach(function (a) {
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    item.innerHTML =
+      '<div class="activity-dot" style="background:' + escapeHtml(a.color) + '"></div>' +
+      '<div class="activity-text"><strong>' + escapeHtml(a.name) + '</strong> <span>' + escapeHtml(a.action) + '</span></div>' +
+      '<div class="activity-time">' + escapeHtml(a.time) + '</div>';
+    list.appendChild(item);
+  });
+}
+function updateDashCheckins() {
+  const el = document.getElementById('dash-checkins');
+  if (el) el.textContent = checkedIn.size;
+}
+
+// ── STUDENT MODAL ─────────────────────────────────
+function openStudentModal(s) {
+  document.getElementById('modal-title').textContent = s.name;
+  const isBlack = s.belt === 'black';
+  document.getElementById('modal-sub').textContent = isBlack
+    ? 'Black Belt · Highest rank'
+    : beltLabel(s.belt) + ' Belt · ' + s.progress + '% to next promotion';
+  document.getElementById('modal-stats').innerHTML =
+    '<div class="modal-stat">' +
+      '<div class="modal-stat-num" style="color:var(--gold)">🔥 ' + escapeHtml(s.streak) + '</div>' +
+      '<div class="modal-stat-label">Day Streak</div>' +
+    '</div>' +
+    '<div class="modal-stat">' +
+      '<div class="modal-stat-num">' + escapeHtml(s.progress) + '%</div>' +
+      '<div class="modal-stat-label">Progress</div>' +
+    '</div>' +
+    '<div class="modal-stat">' +
+      '<div class="modal-stat-num" style="font-size:22px">' +
+        '<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:' + escapeHtml(beltColors[s.belt]) + ';vertical-align:middle"></span>' +
+      '</div>' +
+      '<div class="modal-stat-label">' + escapeHtml(beltLabel(s.belt)) + ' Belt</div>' +
+    '</div>';
+  const actionsEl = document.getElementById('modal-actions');
+  if (isBlack) {
+    actionsEl.innerHTML = '<div style="padding:10px;background:var(--panel);border-radius:10px;font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">Highest belt — no further promotion</div>';
+  } else if (s.progress >= 80) {
+    actionsEl.innerHTML = '<button class="promote-btn" onclick="promoteStudent(' + s.id + ')">⬆ Promote to Next Belt</button>';
+  } else {
+    actionsEl.innerHTML = '<div style="padding:10px;background:var(--panel);border-radius:10px;font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">Student needs ' + (80 - s.progress) + '% more to be eligible for promotion</div>';
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function promoteStudent(id) {
+  const s = students.find(function (x) { return x.id === id; });
+  if (!s) return;
+  const idx = belts.indexOf(s.belt);
+  if (idx < 0 || idx >= belts.length - 1) return;
+  s.belt = belts[idx + 1];
+  s.progress = 0;
+  activityFeed.unshift({ name: s.name, action: 'promoted to ' + beltLabel(s.belt) + ' Belt', time: 'just now', color: s.color });
+  activityFeed = activityFeed.slice(0, 50);
+  showToast(s.name + ' promoted to ' + s.belt + ' belt! 🥋');
+  closeModal();
+  refreshAll();
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modal');
+    if (modal && modal.classList.contains('open')) closeModal();
+  }
+});
+
+// ── INIT ──────────────────────────────────────────
+loadState();
+setHeroDate();
+refreshAll();
+</script>
+</body>
+</html>
